@@ -118,6 +118,9 @@ var (
 	// Indicates if the running minio is in gateway mode.
 	globalIsGateway = false
 
+	// Name of gateway server, e.g S3, GCS, Azure, etc
+	globalGatewayName = ""
+
 	// This flag is set to 'true' by default
 	globalIsBrowserEnabled = true
 
@@ -218,7 +221,10 @@ var (
 	globalCacheExpiry = 90
 	// Max allowed disk cache percentage
 	globalCacheMaxUse = 80
-
+	// Disk cache KMS Key
+	globalCacheKMSKeyID string
+	// Initialized KMS configuration for disk cache
+	globalCacheKMS crypto.KMS
 	// Allocated etcd endpoint for config and bucket DNS.
 	globalEtcdClient *etcd.Client
 

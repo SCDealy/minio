@@ -81,16 +81,16 @@ func request2BucketObjectName(r *http.Request) (bucketName, objectName string) {
 
 // Convert url path into bucket and object name.
 func urlPath2BucketObjectName(path string) (bucketName, objectName string) {
-	if path == "" || path == slashSeparator {
+	if path == "" || path == SlashSeparator {
 		return "", ""
 	}
 
 	// Trim any preceding slash separator.
-	urlPath := strings.TrimPrefix(path, slashSeparator)
+	urlPath := strings.TrimPrefix(path, SlashSeparator)
 
 	// Split urlpath using slash separator into a given number of
 	// expected tokens.
-	tokens := strings.SplitN(urlPath, slashSeparator, 2)
+	tokens := strings.SplitN(urlPath, SlashSeparator, 2)
 	bucketName = tokens[0]
 	if len(tokens) == 2 {
 		objectName = tokens[1]
@@ -474,4 +474,50 @@ func reverseStringSlice(input []string) {
 	for left, right := 0, len(input)-1; left < right; left, right = left+1, right-1 {
 		input[left], input[right] = input[right], input[left]
 	}
+}
+
+// lcp finds the longest common prefix of the input strings.
+// It compares by bytes instead of runes (Unicode code points).
+// It's up to the caller to do Unicode normalization if desired
+// (e.g. see golang.org/x/text/unicode/norm).
+func lcp(l []string) string {
+	// Special cases first
+	switch len(l) {
+	case 0:
+		return ""
+	case 1:
+		return l[0]
+	}
+	// LCP of min and max (lexigraphically)
+	// is the LCP of the whole set.
+	min, max := l[0], l[0]
+	for _, s := range l[1:] {
+		switch {
+		case s < min:
+			min = s
+		case s > max:
+			max = s
+		}
+	}
+	for i := 0; i < len(min) && i < len(max); i++ {
+		if min[i] != max[i] {
+			return min[:i]
+		}
+	}
+	// In the case where lengths are not equal but all bytes
+	// are equal, min is the answer ("foo" < "foobar").
+	return min
+}
+
+// Returns the mode in which MinIO is running
+func getMinioMode() string {
+	mode := globalMinioModeFS
+	if globalIsDistXL {
+		mode = globalMinioModeDistXL
+	} else if globalIsXL {
+		mode = globalMinioModeXL
+	} else if globalIsGateway {
+		mode = globalMinioModeGatewayPrefix + globalGatewayName
+	}
+	return mode
 }
